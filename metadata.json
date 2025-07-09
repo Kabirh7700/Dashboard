@@ -1,0 +1,6 @@
+{
+  "name": "Task Dashboard from Google Sheets",
+  "description": "A web application that displays and filters pending work tasks fetched directly from a Google Sheet, providing a real-time dashboard view.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
