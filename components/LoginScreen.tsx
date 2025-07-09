@@ -36,7 +36,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                 {/* Right Panel: Login Form */}
                 <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
                     <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-2">Welcome Back</h2>
-                    <p className="text-slate-500 mb-8">Please enter your email to continue.</p>
+                    <p className="text-slate-500 mb-8">Please enter your official Gmail to continue.</p>
                     
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
