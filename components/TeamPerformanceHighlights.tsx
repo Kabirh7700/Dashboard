@@ -46,7 +46,7 @@ export const TeamPerformanceHighlights: React.FC<TeamPerformanceHighlightsProps>
             <h3 className="text-xl font-bold text-slate-900">Last Week's Team Highlights</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <HighlightCard 
-                    title="Needs Attention" 
+                    title="Negative score" 
                     employees={summary.needsAttention} 
                     icon={<ExclamationCircleIcon className="h-6 w-6 text-red-500" />} 
                     onSelectEmployee={onSelectEmployee} 
