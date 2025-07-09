@@ -59,7 +59,7 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  placeholder="Search by ID, task, system, doer..."
+                  placeholder="Search by ID, task, system..."
                   className="block w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-base py-2.5 pl-11 pr-10 transition-all"
               />
               {searchTerm && (
