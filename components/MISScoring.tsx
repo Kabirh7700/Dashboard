@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { MISStats } from '../types.ts';
 import { formatDateShort } from '../utils/date.ts';
@@ -16,9 +15,9 @@ export const MISScoring: React.FC<MISScoringProps> = ({ stats, title = "Last Wee
     const { planVsActual, onTime, startDate, endDate } = stats;
 
     const MetricRow = ({ kra, kpi, base, met, performance }: { kra: string, kpi: string, base: number, met: number, performance: number }) => {
-        // Performance is now a failure rate. 0 is good, >0 is bad.
+        // Performance is a deviation percentage. 0 is on-target (good), < 0 is under-performance (bad).
         let performanceColor = 'text-green-600';
-        if (performance > 0) {
+        if (performance < 0) {
             performanceColor = 'text-red-600';
         }
         
