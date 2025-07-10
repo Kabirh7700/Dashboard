@@ -13,4 +13,4 @@ export const GOOGLE_SHEET_ATTENDANCE_URL = `https://docs.google.com/spreadsheets
 
 export const BOSS_EMAIL = 'boss@bonhoeffer.com';
 
-export const ADMIN_EMAILS = ['mis1@bonhoeffermachines.in', 'mis@bonhoeffermachines.in', BOSS_EMAIL]; // Admin users who can see all employee MIS
+export const ADMIN_EMAILS = ['mis1@bonhoeffermachines.in', 'mis@bonhoeffermachines.in','kamiabonhoeffermachines@gmail.com','mis2@bonhoeffermachines.in', BOSS_EMAIL]; // Admin users who can see all employee MIS
