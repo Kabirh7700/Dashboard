@@ -100,9 +100,18 @@ export const calculateKpiCounts = (tasks: TaskData[], userEmail: string | null):
     tasks.forEach(task => {
         if (task.emailId !== userEmail) return;
 
-        myTotal++;
         const plannedDate = parseDate(task.plannedDate);
-        if (!plannedDate) return;
+        
+        // Tasks without a date are considered pending and should be in the main count.
+        if (!plannedDate) {
+            myTotal++;
+            return;
+        }
+        
+        // Only count tasks due on or before today in the main count.
+        if (plannedDate.getTime() <= today.getTime()) {
+            myTotal++;
+        }
         
         if (plannedDate.getTime() < today.getTime()) {
             overdue++;
