@@ -138,11 +138,15 @@ const App: React.FC = () => {
         return false;
       }
 
+      const planned = parseDate(task.plannedDate);
+
       if (kpiFilter === 'all') {
-        return true;
+        // "My Pending Tasks" shows tasks due on or before today, or tasks with no planned date.
+        if (!planned) return true; // Include tasks without a date
+        return planned.getTime() <= today.getTime();
       }
 
-      const planned = parseDate(task.plannedDate);
+      // Other filters require a planned date.
       if (!planned) return false;
 
       if (kpiFilter === 'overdue') {
