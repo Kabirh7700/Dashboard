@@ -123,7 +123,6 @@ const App: React.FC = () => {
   const displayTasks = useMemo(() => {
     const d = new Date();
     const today = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
 
     let filteredTasks = pendingTasks.filter(task => {
@@ -139,18 +138,22 @@ const App: React.FC = () => {
         return false;
       }
 
+      if (kpiFilter === 'all') {
+        return true;
+      }
+
       const planned = parseDate(task.plannedDate);
       if (!planned) return false;
 
-      switch (kpiFilter) {
-        case 'overdue':
-          return planned.getTime() < today.getTime();
-        case 'dueToday':
-          return planned.getTime() === today.getTime();
-        case 'all':
-        default:
-          return planned.getTime() <= today.getTime();
+      if (kpiFilter === 'overdue') {
+        return planned.getTime() < today.getTime();
       }
+
+      if (kpiFilter === 'dueToday') {
+        return planned.getTime() === today.getTime();
+      }
+      
+      return false;
     });
 
     if (sortConfig.key) {
@@ -261,6 +264,7 @@ const App: React.FC = () => {
                   currentUserEmail={currentUserEmail}
                   onSort={handleSort}
                   sortConfig={sortConfig}
+                  kpiFilter={kpiFilter}
                 />
               )}
             </main>
