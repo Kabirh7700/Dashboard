@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TaskData } from '../types.ts';
 import { DocumentCheckIcon, ChevronUpIcon, ChevronDownIcon } from './Icons.tsx';
@@ -7,6 +8,7 @@ interface TaskTableProps {
   currentUserEmail: string | null;
   onSort: (key: keyof TaskData) => void;
   sortConfig: { key: keyof TaskData | null, direction: string };
+  kpiFilter: 'all' | 'overdue' | 'dueToday';
 }
 
 const SortableHeader: React.FC<{ title: string; sortKey: keyof TaskData; onSort: (key: keyof TaskData) => void; sortConfig: { key: keyof TaskData | null, direction: string } }> = ({ title, sortKey, onSort, sortConfig }) => {
@@ -25,7 +27,13 @@ const SortableHeader: React.FC<{ title: string; sortKey: keyof TaskData; onSort:
     )
 }
 
-export const TaskTable: React.FC<TaskTableProps> = ({ tasks, currentUserEmail, onSort, sortConfig }) => {
+export const TaskTable: React.FC<TaskTableProps> = ({ tasks, currentUserEmail, onSort, sortConfig, kpiFilter }) => {
+  const tableTitles = {
+    all: 'My Pending Tasks',
+    overdue: 'Overdue Tasks',
+    dueToday: 'Tasks Due Today',
+  };
+    
   if (tasks.length === 0) {
     return (
       <div className="text-center py-16 bg-white rounded-xl shadow-lg border border-slate-200/50">
@@ -42,7 +50,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({ tasks, currentUserEmail, o
   return (
     <div className="bg-white rounded-xl shadow-lg border border-slate-200/50 overflow-hidden">
         <header className="px-6 py-4 border-b border-slate-200/70">
-            <h3 className="text-lg font-bold text-slate-900">Active Tasks (Overdue & Due Today)</h3>
+            <h3 className="text-lg font-bold text-slate-900">{tableTitles[kpiFilter]}</h3>
         </header>
         <div className="overflow-x-auto">
             <table className="min-w-full">
