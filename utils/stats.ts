@@ -1,4 +1,3 @@
-
 import { TaskData, MISStats, HistoricalDataPoint, TeamPerformanceSummary, Doer } from '../types.ts';
 import { parseDate, getMonthDateRange, getLastWeekDateRange } from './date.ts';
 
@@ -27,20 +26,20 @@ export const calculateMISStats = (tasks: TaskData[], userEmail: string | null, s
 
     const round = (num: number) => Math.round(num);
 
-    // Performance is the % of tasks that FAILED the KPI
-    const planVsActualFailureRate = periodPlannedCount === 0 ? 0 : ((periodPlannedCount - completedTasksCount) / periodPlannedCount) * 100;
-    const onTimeFailureRate = periodPlannedCount === 0 ? 0 : ((periodPlannedCount - onTimeTasksCount) / periodPlannedCount) * 100;
+    // Performance is the percentage deviation from the plan: ((Actual - Planned) / Planned) * 100
+    const planVsActualPerformance = periodPlannedCount === 0 ? 0 : ((completedTasksCount - periodPlannedCount) / periodPlannedCount) * 100;
+    const onTimePerformance = periodPlannedCount === 0 ? 0 : ((onTimeTasksCount - periodPlannedCount) / periodPlannedCount) * 100;
 
     return {
         planVsActual: {
             base: periodPlannedCount,
             met: completedTasksCount,
-            performance: round(planVsActualFailureRate),
+            performance: round(planVsActualPerformance),
         },
         onTime: {
             base: periodPlannedCount, // Base is now consistent for both KPIs
             met: onTimeTasksCount,
-            performance: round(onTimeFailureRate),
+            performance: round(onTimePerformance),
         },
         startDate: startDate,
         endDate: endDate,
