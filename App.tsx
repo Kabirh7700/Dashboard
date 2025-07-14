@@ -8,13 +8,14 @@ import { TaskData, MISStats, Doer, RawWeeklyAttendance, AttendanceStats } from '
 import { Dashboard } from './components/Dashboard.tsx';
 import { LoginScreen } from './components/LoginScreen.tsx';
 import { MISScoring } from './components/MISScoring.tsx';
-import { calculateKpiCounts, calculateMISStats } from './utils/stats.ts';
+import { calculateKpiCounts, calculateMISStats, getWorkNotDoneOnTimeTasks, getWorkNotDoneTasks } from './utils/stats.ts';
 import { parseDate, getLastWeekDateRange } from './utils/date.ts';
 import { EmployeeMISView } from './components/EmployeeMISView.tsx';
 import { ADMIN_EMAILS, BOSS_EMAIL } from './constants.ts';
 import { EmployeeProfileCard } from './components/EmployeeProfileCard.tsx';
 import { AttendanceReport } from './components/AttendanceReport.tsx';
 import { calculateAttendanceStats } from './utils/attendance.ts';
+import { TasksBreakdownTable } from './components/TasksBreakdownTable.tsx';
 
 
 const App: React.FC = () => {
@@ -29,6 +30,7 @@ const App: React.FC = () => {
   const [sortConfig, setSortConfig] = useState<{ key: keyof TaskData | null, direction: 'ascending' | 'descending' }>({ key: 'plannedDate', direction: 'ascending' });
   const [kpiFilter, setKpiFilter] = useState<'all' | 'overdue' | 'dueToday'>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [visibleBreakdown, setVisibleBreakdown] = useState<'none' | 'notDone' | 'notOnTime'>('none');
 
   const isAdmin = useMemo(() => ADMIN_EMAILS.includes(currentUserEmail ?? ''), [currentUserEmail]);
   const isBoss = useMemo(() => currentUserEmail === BOSS_EMAIL, [currentUserEmail]);
@@ -103,6 +105,19 @@ const App: React.FC = () => {
     const { startDate, endDate } = getLastWeekDateRange();
     return calculateMISStats(allTasks, currentUserEmail, startDate, endDate);
   }, [allTasks, currentUserEmail]);
+
+  const { workNotDone, workNotDoneOnTime } = useMemo(() => {
+    if (!currentUserEmail) return { workNotDone: [], workNotDoneOnTime: [] };
+    const { startDate, endDate } = getLastWeekDateRange();
+    return {
+        workNotDone: getWorkNotDoneTasks(allTasks, currentUserEmail, startDate, endDate),
+        workNotDoneOnTime: getWorkNotDoneOnTimeTasks(allTasks, currentUserEmail, startDate, endDate)
+    };
+  }, [allTasks, currentUserEmail]);
+
+  const handleBreakdownToggle = useCallback((breakdown: 'none' | 'notDone' | 'notOnTime') => {
+      setVisibleBreakdown(current => (current === breakdown ? 'none' : breakdown));
+  }, []);
 
   const attendanceStats: AttendanceStats | null = useMemo(() => {
     const { startDate, endDate } = getLastWeekDateRange();
@@ -240,7 +255,27 @@ const App: React.FC = () => {
                 <AttendanceReport stats={attendanceStats} title="My Weekly Attendance" />
               </div>
               <div className="lg:col-span-2 space-y-8">
-                <MISScoring stats={misStats} title="My Weekly Performance" />
+                <MISScoring 
+                  stats={misStats} 
+                  title="My Weekly Performance"
+                  activeBreakdown={visibleBreakdown}
+                  onRowClick={handleBreakdownToggle} 
+                />
+                 <div className="transition-all duration-300">
+                    {visibleBreakdown === 'notDone' && (
+                        <TasksBreakdownTable
+                            title={`Work NOT Done (${workNotDone.length} Tasks)`}
+                            tasks={workNotDone}
+                        />
+                    )}
+                    {visibleBreakdown === 'notOnTime' && (
+                        <TasksBreakdownTable
+                            title={`Work NOT Done On Time (${workNotDoneOnTime.length} Tasks)`}
+                            tasks={workNotDoneOnTime}
+                            showDelay={true}
+                        />
+                    )}
+                </div>
                 <Dashboard
                   overdueTasksCount={overdueTasksCount}
                   tasksDueTodayCount={tasksDueTodayCount}
