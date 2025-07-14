@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { MISStats } from '../types.ts';
 import { formatDateShort } from '../utils/date.ts';
@@ -28,6 +27,7 @@ export const MISScoring: React.FC<MISScoringProps> = ({ stats, title = "Last Wee
             }
         };
 
+        // Performance is now a percentage difference. Negative means below target, 0 or positive is good.
         let performanceColor = 'text-green-600';
         if (performance < 0) {
             performanceColor = 'text-red-600';
@@ -39,7 +39,9 @@ export const MISScoring: React.FC<MISScoringProps> = ({ stats, title = "Last Wee
                 <div className="col-span-12 md:col-span-3 text-left text-slate-600">{kpi}</div>
                 <div className="col-span-4 md:col-span-2 text-center text-2xl font-bold text-slate-800">{base}</div>
                 <div className="col-span-4 md:col-span-2 text-center text-2xl font-bold text-slate-800">{met}</div>
-                <div className={`col-span-3 md:col-span-1 text-center text-2xl font-bold ${performanceColor}`}>{performance}%</div>
+                <div className={`col-span-3 md:col-span-1 text-center text-2xl font-bold ${performanceColor}`}>
+                    {performance}%
+                </div>
                 <div className="col-span-1 flex justify-end items-center">
                     {isClickable && (
                         <span className={`flex items-center justify-center h-7 w-7 rounded-full transition-all duration-200 ${isActive ? 'bg-blue-100' : 'bg-slate-100 group-hover:bg-blue-100'}`}>
