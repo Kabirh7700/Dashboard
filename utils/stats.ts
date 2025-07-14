@@ -1,6 +1,13 @@
 import { TaskData, MISStats, HistoricalDataPoint, TeamPerformanceSummary, Doer } from '../types.ts';
 import { parseDate, getMonthDateRange, getLastWeekDateRange } from './date.ts';
 
+const roundToTwoDecimals = (num: number): number => {
+    if (num === 0) return 0;
+    // Round to 2 decimal places
+    return Math.round((num + Number.EPSILON) * 100) / 100;
+};
+
+
 export const calculateMISStats = (tasks: TaskData[], userEmail: string | null, startDate: Date, endDate: Date): MISStats | null => {
     if (!userEmail) return null;
 
@@ -13,33 +20,46 @@ export const calculateMISStats = (tasks: TaskData[], userEmail: string | null, s
 
     const periodPlannedCount = tasksPlannedInPeriod.length;
     
-    // KPI 1: Work Done vs Planned. A task is "done" if it has an actualDate.
-    const completedTasksCount = tasksPlannedInPeriod.filter(task => task.actualDate).length;
+    const completedTasks = tasksPlannedInPeriod.filter(task => task.actualDate);
+    const completedTasksCount = completedTasks.length;
     
-    // KPI 2: Work Done On Time vs Planned. A task is "on time" if actualDate <= plannedDate.
-    const onTimeTasksCount = tasksPlannedInPeriod.filter(task => {
+    const onTimeTasksCount = completedTasks.filter(task => {
         if (!task.actualDate) return false;
         const actualDate = parseDate(task.actualDate);
         const plannedDate = parseDate(task.plannedDate);
         return actualDate && plannedDate && actualDate.getTime() <= plannedDate.getTime();
     }).length;
 
-    const round = (num: number) => Math.round(num);
+    // Based on user formula: =iferror(if(F7<>"",round(F7/E7*100-100,2),""),0)
+    // Where F7 is "Actual" and E7 is "Planned"
+    // This calculates percentage difference. Negative means less than planned.
 
-    // Performance is the percentage deviation from the plan: ((Actual - Planned) / Planned) * 100
-    const planVsActualPerformance = periodPlannedCount === 0 ? 0 : ((completedTasksCount - periodPlannedCount) / periodPlannedCount) * 100;
-    const onTimePerformance = periodPlannedCount === 0 ? 0 : ((onTimeTasksCount - periodPlannedCount) / periodPlannedCount) * 100;
+    // KPI 1: % work NOT done. Performance is diff between completed and planned.
+    const planVsActualPerformance = periodPlannedCount > 0
+        ? (completedTasksCount / periodPlannedCount * 100) - 100
+        : 0;
+
+    // KPI 2: % work NOT done on time. Base is completed tasks.
+    const onTimeBase = completedTasksCount;
+    const onTimePerformance = onTimeBase > 0
+        ? (onTimeTasksCount / onTimeBase * 100) - 100
+        : 0;
 
     return {
         planVsActual: {
             base: periodPlannedCount,
+            // The 'met' value (UI's 'Actual' column) shows the number of tasks COMPLETED.
             met: completedTasksCount,
-            performance: round(planVsActualPerformance),
+            // 'performance' is the percentage difference, rounded to 2 decimal places.
+            performance: roundToTwoDecimals(planVsActualPerformance),
         },
         onTime: {
-            base: periodPlannedCount, // Base is now consistent for both KPIs
+            // The 'base' for on-time tasks is the number of tasks that were COMPLETED.
+            base: onTimeBase,
+            // The 'met' value (UI's 'Actual' column) shows the number of tasks COMPLETED ON TIME.
             met: onTimeTasksCount,
-            performance: round(onTimePerformance),
+            // 'performance' is the percentage difference, rounded to 2 decimal places.
+            performance: roundToTwoDecimals(onTimePerformance),
         },
         startDate: startDate,
         endDate: endDate,
@@ -74,9 +94,10 @@ export const getWorkNotDoneOnTimeTasks = (allTasks: TaskData[], userEmail: strin
 
         const actualDate = parseDate(task.actualDate);
         
-        // A task is "not done on time" if it was not completed at all, OR if it was completed late.
+        // A task is "not done on time" if it was completed, but LATE.
+        // It MUST have an actualDate. This is the fix.
         if (!actualDate) {
-            return true; // Not completed at all, therefore not on time.
+            return false;
         }
 
         return actualDate.getTime() > plannedDate.getTime();
@@ -192,13 +213,13 @@ export const calculateTeamPerformanceSummary = (tasks: TaskData[], doers: Doer[]
             return; // Skip users with no planned work last week
         }
 
-        const allTasksCompleted = stats.planVsActual.met === stats.planVsActual.base;
-        const allTasksOnTime = stats.onTime.met === stats.onTime.base;
+        // A user needs attention if their performance is negative for either KPI.
+        const needsAttention = stats.planVsActual.performance < 0 || stats.onTime.performance < 0;
 
-        if (allTasksCompleted && allTasksOnTime) {
-            summary.onTrack.push(doer);
-        } else {
+        if (needsAttention) {
             summary.needsAttention.push(doer);
+        } else {
+            summary.onTrack.push(doer);
         }
     });
 
