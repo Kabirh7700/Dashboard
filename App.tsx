@@ -40,7 +40,7 @@ const App: React.FC = () => {
     try {
       const [tasks, attendance] = await Promise.all([
         fetchTasks(),
-        fetchAttendanceData(),
+        fetchAttendanceData()
       ]);
       setAllTasks(tasks);
       setRawWeeklyAttendance(attendance);
@@ -59,10 +59,8 @@ const App: React.FC = () => {
 
     initialFetch();
 
-    const intervalId = setInterval(async () => {
-      setIsRefreshing(true);
-      await fetchAndSetData();
-      setIsRefreshing(false);
+    const intervalId = setInterval(() => {
+      fetchAndSetData();
     }, 60000);
 
     return () => clearInterval(intervalId);
