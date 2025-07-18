@@ -40,7 +40,7 @@ const App: React.FC = () => {
     try {
       const [tasks, attendance] = await Promise.all([
         fetchTasks(),
-        fetchAttendanceData()
+        fetchAttendanceData(),
       ]);
       setAllTasks(tasks);
       setRawWeeklyAttendance(attendance);
@@ -51,17 +51,20 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const initialFetch = async () => {
-      setIsLoading(true);
-      await fetchAndSetData();
-      setIsLoading(false);
+    const initialLoad = async () => {
+        setIsLoading(true);
+        await fetchAndSetData();
+        setIsLoading(false);
     };
+    initialLoad();
 
-    initialFetch();
-
-    const intervalId = setInterval(() => {
-      fetchAndSetData();
-    }, 60000);
+    const backgroundRefresh = async () => {
+        setIsRefreshing(true);
+        await fetchAndSetData();
+        setIsRefreshing(false);
+    };
+    
+    const intervalId = setInterval(backgroundRefresh, 60000);
 
     return () => clearInterval(intervalId);
   }, [fetchAndSetData]);
@@ -236,7 +239,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-slate-200 text-slate-900">
       <Header
         onRefresh={handleManualRefresh}
-        isLoading={isRefreshing}
+        isLoading={isLoading || isRefreshing}
         currentUserEmail={currentUser?.name || currentUserEmail}
         currentUserImageUrl={currentUser?.imageUrl}
         onLogout={handleLogout}
@@ -322,4 +325,5 @@ const App: React.FC = () => {
 };
 
 export default App;
+
 
