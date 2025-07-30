@@ -3,7 +3,6 @@ import React from 'react';
 import { LogoIcon, RefreshIcon, UserCircleIcon } from './Icons.tsx';
 
 interface HeaderProps {
-  onRefresh: () => void;
   isLoading: boolean;
   currentUserEmail: string;
   currentUserImageUrl?: string;
@@ -27,7 +26,7 @@ const NavButton: React.FC<{ label: string, onClick: () => void, isActive: boolea
   );
 }
 
-export const Header: React.FC<HeaderProps> = ({ onRefresh, isLoading, currentUserEmail, currentUserImageUrl, onLogout, lastRefreshed, isAdmin, isBoss, currentView, onViewChange }) => {
+export const Header: React.FC<HeaderProps> = ({ isLoading, currentUserEmail, currentUserImageUrl, onLogout, lastRefreshed, isAdmin, isBoss, currentView, onViewChange }) => {
   return (
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg shadow-sm border-b border-slate-900/10">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -51,9 +50,12 @@ export const Header: React.FC<HeaderProps> = ({ onRefresh, isLoading, currentUse
             <div className="flex items-center gap-3">
               <div className="text-right">
                 <p className="text-sm font-semibold text-slate-800">{currentUserEmail}</p>
-                <p className="text-xs text-slate-500" suppressHydrationWarning>
-                  {lastRefreshed ? `Updated: ${lastRefreshed.toLocaleTimeString()}` : 'Updating...'}
-                </p>
+                <div className="flex items-center justify-end gap-1.5">
+                    {isLoading && <RefreshIcon className="h-3 w-3 animate-spin text-slate-500" />}
+                    <p className="text-xs text-slate-500" suppressHydrationWarning>
+                      {lastRefreshed ? `Updated: ${lastRefreshed.toLocaleTimeString()}` : 'Updating...'}
+                    </p>
+                </div>
               </div>
               
               {currentUserImageUrl ? (
@@ -64,17 +66,6 @@ export const Header: React.FC<HeaderProps> = ({ onRefresh, isLoading, currentUse
 
               <button onClick={onLogout} className="rounded-md bg-slate-200/70 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-300/80 transition-colors">Change</button>
             </div>
-           
-            <div className="h-6 w-px bg-slate-300/60"></div>
-
-            <button
-              onClick={onRefresh}
-              disabled={isLoading}
-              className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-slate-400 disabled:cursor-not-allowed transition-all duration-200 hover:-translate-y-0.5"
-            >
-              <RefreshIcon className={`h-5 w-5 ${isLoading ? 'animate-spin' : ''}`} />
-              <span>{isLoading ? 'Refreshing...' : 'Refresh'}</span>
-            </button>
           </div>
         </div>
       </div>
