@@ -17,51 +17,16 @@ import { AttendanceReport } from './components/AttendanceReport.tsx';
 import { calculateAttendanceStats } from './utils/attendance.ts';
 import { TasksBreakdownTable } from './components/TasksBreakdownTable.tsx';
 
-// Helper to get initial state from localStorage, enabling instant UI rendering with cached data.
-const getInitialState = () => {
-  try {
-    const cachedTasks = localStorage.getItem('tasksData');
-    const cachedAttendance = localStorage.getItem('attendanceData');
-    const cachedLastRefreshed = localStorage.getItem('lastRefreshed');
-
-    const allTasks = cachedTasks ? JSON.parse(cachedTasks) : [];
-    const rawWeeklyAttendance = cachedAttendance ? JSON.parse(cachedAttendance) : [];
-    const lastRefreshed = cachedLastRefreshed ? new Date(cachedLastRefreshed) : null;
-    
-    // Only show the main loader if there's no cached data at all.
-    const hasCache = allTasks.length > 0;
-
-    return {
-      allTasks,
-      rawWeeklyAttendance,
-      lastRefreshed,
-      isLoading: !hasCache,
-    };
-  } catch (error) {
-    console.error("Failed to load cached data from localStorage", error);
-    // In case of error (e.g., corrupted data), start fresh.
-    return {
-      allTasks: [],
-      rawWeeklyAttendance: [],
-      lastRefreshed: null,
-      isLoading: true,
-    };
-  }
-};
-
 
 const App: React.FC = () => {
-  // Initialize state with cached data for a faster initial load.
-  const initialState = useMemo(() => getInitialState(), []);
-  
-  const [allTasks, setAllTasks] = useState<TaskData[]>(initialState.allTasks);
-  const [rawWeeklyAttendance, setRawWeeklyAttendance] = useState<RawWeeklyAttendance[]>(initialState.rawWeeklyAttendance);
-  const [isLoading, setIsLoading] = useState<boolean>(initialState.isLoading);
+  const [allTasks, setAllTasks] = useState<TaskData[]>([]);
+  const [rawWeeklyAttendance, setRawWeeklyAttendance] = useState<RawWeeklyAttendance[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(() => localStorage.getItem('taskDashboardUserEmail'));
   const [view, setView] = useState<'dashboard' | 'employeeMIS'>('dashboard');
-  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(initialState.lastRefreshed);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: keyof TaskData | null, direction: 'ascending' | 'descending' }>({ key: 'plannedDate', direction: 'ascending' });
   const [kpiFilter, setKpiFilter] = useState<'all' | 'overdue' | 'dueToday'>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -70,7 +35,6 @@ const App: React.FC = () => {
   const isAdmin = useMemo(() => ADMIN_EMAILS.includes(currentUserEmail ?? ''), [currentUserEmail]);
   const isBoss = useMemo(() => currentUserEmail === BOSS_EMAIL, [currentUserEmail]);
 
-  // This function fetches fresh data and updates both the state and localStorage.
   const fetchAndSetData = useCallback(async () => {
     setError(null);
     try {
@@ -78,40 +42,32 @@ const App: React.FC = () => {
         fetchTasks(),
         fetchAttendanceData(),
       ]);
-      const refreshDate = new Date();
       setAllTasks(tasks);
       setRawWeeklyAttendance(attendance);
-      setLastRefreshed(refreshDate);
-
-      // Save to localStorage for the next visit to ensure a fast load.
-      localStorage.setItem('tasksData', JSON.stringify(tasks));
-      localStorage.setItem('attendanceData', JSON.stringify(attendance));
-      localStorage.setItem('lastRefreshed', refreshDate.toISOString());
+      setLastRefreshed(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred.');
     }
   }, []);
 
-  // Effect to handle the initial data fetch and set up periodic background refreshing.
   useEffect(() => {
-    const handleRefresh = async () => {
+    const initialLoad = async () => {
+        setIsLoading(true);
+        await fetchAndSetData();
+        setIsLoading(false);
+    };
+    initialLoad();
+
+    const backgroundRefresh = async () => {
         setIsRefreshing(true);
         await fetchAndSetData();
-        // This ensures that after the very first fetch (when cache was empty),
-        // we turn off the main loader. It has no effect on subsequent refreshes.
-        setIsLoading(false);
         setIsRefreshing(false);
     };
-
-    // Initial fetch on mount.
-    handleRefresh();
     
-    // Set up periodic refresh every minute.
-    const intervalId = setInterval(handleRefresh, 60000);
+    const intervalId = setInterval(backgroundRefresh, 60000);
 
     return () => clearInterval(intervalId);
   }, [fetchAndSetData]);
-
 
   useEffect(() => {
     if (isBoss) {
@@ -269,11 +225,6 @@ const App: React.FC = () => {
     setView('dashboard'); // Reset view on logout
   }, []);
 
-  // Show a full-page loader only if there is no cached data on the initial visit.
-  if (isLoading) {
-    return <Loader />;
-  }
-
   if (!currentUserEmail) {
     return <LoginScreen onLogin={handleLogin} />;
   }
@@ -281,7 +232,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-slate-200 text-slate-900">
       <Header
-        isLoading={isRefreshing}
+        isLoading={isLoading || isRefreshing}
         currentUserEmail={currentUser?.name || currentUserEmail}
         currentUserImageUrl={currentUser?.imageUrl}
         onLogout={handleLogout}
@@ -334,7 +285,9 @@ const App: React.FC = () => {
             </div>
 
             <main>
-              {error ? (
+              {isLoading ? (
+                <Loader />
+              ) : error ? (
                 <div className="text-center py-10 text-red-600 bg-red-50 rounded-lg shadow-md">
                   <h3 className="text-xl font-bold">Failed to load data</h3>
                   <p className="mt-2">{error}</p>
