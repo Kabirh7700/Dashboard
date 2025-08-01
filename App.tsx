@@ -22,7 +22,6 @@ const App: React.FC = () => {
   const [allTasks, setAllTasks] = useState<TaskData[]>([]);
   const [rawWeeklyAttendance, setRawWeeklyAttendance] = useState<RawWeeklyAttendance[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(() => localStorage.getItem('taskDashboardUserEmail'));
   const [view, setView] = useState<'dashboard' | 'employeeMIS'>('dashboard');
@@ -59,12 +58,10 @@ const App: React.FC = () => {
     initialLoad();
 
     const backgroundRefresh = async () => {
-        setIsRefreshing(true);
         await fetchAndSetData();
-        setIsRefreshing(false);
     };
     
-    const intervalId = setInterval(backgroundRefresh, 60000);
+    const intervalId = setInterval(backgroundRefresh, 1000);
 
     return () => clearInterval(intervalId);
   }, [fetchAndSetData]);
@@ -232,7 +229,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-slate-200 text-slate-900">
       <Header
-        isLoading={isLoading || isRefreshing}
+        isLoading={isLoading}
         currentUserEmail={currentUser?.name || currentUserEmail}
         currentUserImageUrl={currentUser?.imageUrl}
         onLogout={handleLogout}
