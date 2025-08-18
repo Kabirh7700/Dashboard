@@ -19,7 +19,7 @@ export const calculateAttendanceStats = (
     });
 
     const presentDays = userRecord?.presentDays ?? 0;
-    const totalWorkingDays = 4; // As per user request, can be updated later for holidays
+    const totalWorkingDays = 5; // As per user request, can be updated later for holidays
 
     const attendancePercentage = totalWorkingDays > 0 ? Math.round((presentDays / totalWorkingDays) * 100) : 0;
     
