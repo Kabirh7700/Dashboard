@@ -69,7 +69,7 @@ export const getLastWeekDateRange = () => {
 
     // Last week's Friday is 4 days after last week's Monday.
     const endDate = new Date(startDate);
-    endDate.setUTCDate(startDate.getUTCDate() + 4); // Monday to Friday
+    endDate.setUTCDate(startDate.getUTCDate() + 6); // Monday to Friday
 
     return { startDate, endDate };
 };
