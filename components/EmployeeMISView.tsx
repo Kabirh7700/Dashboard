@@ -32,7 +32,13 @@ export const EmployeeMISView: React.FC<EmployeeMISViewProps> = ({ allTasks, allD
             { value: 'last-to-last-week', label: 'Last to Last Week' },
         ];
         
-        const years = new Set(allTasks.map(t => parseDate(t.plannedDate)?.getFullYear()).filter(Boolean));
+        const yearsWithUndefined = allTasks.map(t => parseDate(t.plannedDate)?.getFullYear());
+        // FIX: Using a type assertion after filtering out null/undefined values to ensure
+        // the TypeScript compiler correctly infers `definedYears` as `number[]`. This
+        // prevents a downstream error in the `sort` method where it would attempt
+        // arithmetic on non-numeric types.
+        const definedYears = yearsWithUndefined.filter(year => year != null) as number[];
+        const years = new Set(definedYears);
         if (!years.has(new Date().getFullYear())) {
             years.add(new Date().getFullYear());
         }
@@ -78,10 +84,10 @@ export const EmployeeMISView: React.FC<EmployeeMISViewProps> = ({ allTasks, allD
         // Only show attendance for weekly views
         if (!selectedEmail || !isWeeklyView) return null;
 
-        const stats = calculateAttendanceStats(rawWeeklyAttendance, selectedEmail, allDoers);
+        const { startDate, endDate } = dateRange;
+        const stats = calculateAttendanceStats(rawWeeklyAttendance, selectedEmail, allDoers, startDate, endDate);
         if (!stats) return null;
         
-        const { startDate, endDate } = dateRange;
         return { ...stats, startDate, endDate };
     }, [rawWeeklyAttendance, selectedEmail, allDoers, isWeeklyView, dateRange]);
 
