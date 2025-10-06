@@ -1,11 +1,14 @@
 
 import { RawWeeklyAttendance, AttendanceStats, Doer } from '../types.ts';
 import { findBestDoerMatch } from './fuzzyMatch.ts';
+import { calculateWorkingDays } from './holidays.ts';
 
 export const calculateAttendanceStats = (
     weeklyAttendance: RawWeeklyAttendance[],
     userEmail: string,
-    allDoers: Doer[]
+    allDoers: Doer[],
+    startDate: Date,
+    endDate: Date,
 ): AttendanceStats | null => {
     if (!userEmail || !allDoers.length || !weeklyAttendance.length) return null;
 
@@ -19,7 +22,7 @@ export const calculateAttendanceStats = (
     });
 
     const presentDays = userRecord?.presentDays ?? 0;
-    const totalWorkingDays = 5; // As per user request, can be updated later for holidays
+    const totalWorkingDays = calculateWorkingDays(startDate, endDate);
 
     const attendancePercentage = totalWorkingDays > 0 ? Math.round((presentDays / totalWorkingDays) * 100) : 0;
     
